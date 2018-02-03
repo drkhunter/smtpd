@@ -2,9 +2,9 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+use PhpMimeMailParser\Parser;
 use TheFox\Smtp\Server;
 use TheFox\Smtp\Event;
-use Zend\Mail\Message;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
@@ -58,7 +58,7 @@ if (!$server->listen($contextOptions)) {
     exit(1);
 }
 
-$sendEvent = new Event(Event::TRIGGER_NEW_MAIL, null, function (Event $event, string $from, array $rcpts, Message $mail) {
+$sendEvent = new Event(Event::TRIGGER_NEW_MAIL, null, function (Event $event, string $from, array $rcpts, Parser $mail) {
     // Do stuff: DNS lookup the MX record for the recipient's domain,
     //           check whether the recipient is on a whitelist,
     //           handle the email, etc, ...
@@ -73,9 +73,9 @@ $sendEvent = new Event(Event::TRIGGER_NEW_MAIL, null, function (Event $event, st
     $mailer->Username = 'example@example.com';
     $mailer->Password = 'your_password';
     $mailer->SetFrom('example@example.com', 'John Doe');
-    $mailer->Subject = $mail->getSubject();
-    $mailer->AltBody = $mail->getBody();
-    $mailer->MsgHTML($mail->getBody());
+    $mailer->Subject = $mail->getHeader('subject');
+    $mailer->AltBody = $mail->getMessageBody('text');
+    $mailer->MsgHTML($mail->getMessageBody('html'));
 
     foreach ($rcpts as $rcptId => $rcpt) {
         $mailer->AddAddress($rcpt);
