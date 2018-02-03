@@ -2,9 +2,9 @@
 
 namespace TheFox\Smtp;
 
+use PhpMimeMailParser\Parser;
 use RuntimeException;
 use PHPUnit_Framework_MockObject_MockObject;
-use Zend\Mail\Message;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Psr\Log\NullLogger;
 use Psr\Log\LoggerAwareTrait;
@@ -453,11 +453,12 @@ class Client
             } elseif ($this->getStatus('hasData')) {
                 if ($msgRaw == '.') {
                     $this->mail = substr($this->mail, 0, -strlen(static::MSG_SEPARATOR));
-
-                    $zmail = Message::fromString($this->mail);
+                    
+                    $parser = new Parser();
+                    $parser->setText($this->mail);
 
                     $server = $this->getServer();
-                    $server->newMail($this->from, $this->rcpt, $zmail);
+                    $server->newMail($this->from, $this->rcpt, $parser);
                     
                     $this->from = '';
                     $this->rcpt = [];

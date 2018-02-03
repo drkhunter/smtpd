@@ -4,8 +4,8 @@ namespace TheFox\Test;
 
 require_once 'TestObj.php';
 
+use PhpMimeMailParser\Parser;
 use PHPUnit\Framework\TestCase;
-use Zend\Mail\Message;
 use TheFox\Smtp\Server;
 use TheFox\Smtp\Client;
 use TheFox\Smtp\Event;
@@ -103,10 +103,11 @@ class ServerTest extends TestCase
         $mail .= 'This is the message body.' . Client::MSG_SEPARATOR;
         $mail .= 'END' . Client::MSG_SEPARATOR;
 
-        $zmail = Message::fromString($mail);
+        $parser = new Parser();
+        $parser->setText($mail);
 
         $rcpt = ['to1@example.com', 'to2@example.com', 'cc@example.com', 'bcc@example.com'];
-        $server->newMail('from@example.com', $rcpt, $zmail);
+        $server->newMail('from@example.com', $rcpt, $parser);
 
         $this->assertEquals(24, $testData);
         $this->assertEquals(42, $event1->getReturnValue());

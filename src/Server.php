@@ -8,10 +8,10 @@
 namespace TheFox\Smtp;
 
 use Exception;
+use PhpMimeMailParser\Parser;
 use RuntimeException;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
-use Zend\Mail\Message;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use TheFox\Network\AbstractSocket;
 use TheFox\Network\Socket;
@@ -332,9 +332,9 @@ class Server extends Thread
     /**
      * @param string $from
      * @param array $rcpt
-     * @param \Zend\Mail\Message $mail
+     * @param Parser $mail
      */
-    public function newMail(string $from, array $rcpt, Message $mail)
+    public function newMail(string $from, array $rcpt, Parser $mail)
     {
         $this->eventExecute(Event::TRIGGER_NEW_MAIL, [$from, $rcpt, $mail]);
     }
