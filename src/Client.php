@@ -405,7 +405,7 @@ class Client
                 return $this->sendSyntaxErrorInParameters();
             }
         } elseif ($commandCmp == 'starttls') {
-            if (!empty($args)) {
+            if ( ! empty($args)) {
                 return $this->sendSyntaxErrorInParameters();
             }
 
@@ -417,8 +417,11 @@ class Client
             } catch (RuntimeException $e) {
                 return $this->sendTemporaryErrorStartTls();
             }
+        } elseif ($commandCmp == 'rset') {
+            $this->recvBufferTmp = '';
+            return $this->sendOk();
         } elseif ($commandCmp == 'help') {
-            return $this->sendOk('HELO, EHLO, MAIL FROM, RCPT TO, DATA, NOOP, QUIT');
+            return $this->sendOk('HELO, EHLO, MAIL FROM, RCPT TO, DATA, NOOP, RSET, QUIT');
         } else {
             if ($this->getStatus('hasAuth')) {
                 if ($this->getStatus('hasAuthPlain')) {
