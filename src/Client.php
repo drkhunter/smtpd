@@ -13,7 +13,7 @@ use TheFox\Network\StreamSocket;
 class Client
 {
     use LoggerAwareTrait;
-    
+
     const MSG_SEPARATOR = "\r\n";
 
     /**
@@ -103,11 +103,12 @@ class Client
             'logger' => new NullLogger(),
         ]);
         $this->options = $resolver->resolve($options);
-        
+
         $this->logger = $this->options['logger'];
         $this->hostname = $this->options['hostname'];
-        
+
         $this->status = [];
+        $this->status['authenticated'] = false;
         $this->status['hasHello'] = false;
         $this->status['hasMail'] = false;
         $this->status['hasShutdown'] = false;
@@ -303,6 +304,7 @@ class Client
         $command = array_shift($args);
         $commandCmp = strtolower($command);
 
+        $this->logger->debug('client ' . $this->id . ' say: /' . $command . '/ - /' . join('/ /', $args) . '/');
 
         if ($commandCmp == 'helo') {
             $this->setStatus('hasHello', true);
@@ -321,6 +323,9 @@ class Client
 
             return $this->dataSend($response);
         } elseif ($commandCmp == 'mail') {
+            if (!$this->getStatus('authenticated')) {
+                return $this->sendAuthRequired();
+            }
             if ($this->getStatus('hasHello')) {
                 if (isset($args[0]) && $args[0]) {
                     $this->setStatus('hasMail', true);
@@ -338,6 +343,9 @@ class Client
                 return $this->sendSyntaxErrorCommandUnrecognized();
             }
         } elseif ($commandCmp == 'rcpt') {
+            if (!$this->getStatus('authenticated')) {
+                return $this->sendAuthRequired();
+            }
             if ($this->getStatus('hasHello')) {
                 if (isset($args[0]) && $args[0]) {
                     $this->setStatus('hasMail', true);
@@ -359,6 +367,9 @@ class Client
                 return $this->sendSyntaxErrorCommandUnrecognized();
             }
         } elseif ($commandCmp == 'data') {
+            if (!$this->getStatus('authenticated')) {
+                return $this->sendAuthRequired();
+            }
             if ($this->getStatus('hasHello')) {
                 $this->setStatus('hasData', true);
                 return $this->sendDataResponse();
@@ -421,6 +432,9 @@ class Client
             $this->recvBufferTmp = '';
             return $this->sendOk();
         } elseif ($commandCmp == 'help') {
+            if (!$this->getStatus('authenticated')) {
+                return $this->sendAuthRequired();
+            }
             return $this->sendOk('HELO, EHLO, MAIL FROM, RCPT TO, DATA, NOOP, RSET, QUIT');
         } else {
             if ($this->getStatus('hasAuth')) {
@@ -456,13 +470,13 @@ class Client
             } elseif ($this->getStatus('hasData')) {
                 if ($msgRaw == '.') {
                     $this->mail = substr($this->mail, 0, -strlen(static::MSG_SEPARATOR));
-                    
+
                     $parser = new Parser();
                     $parser->setText($this->mail);
 
                     $server = $this->getServer();
                     $server->newMail($this->from, $this->rcpt, $parser);
-                    
+
                     $this->from = '';
                     $this->rcpt = [];
                     $this->mail = '';
@@ -570,6 +584,7 @@ class Client
      */
     private function sendAuthSuccessResponse(): string
     {
+        $this->setStatus('authenticated', true);
         return $this->dataSend('235 2.7.0 Authentication successful');
     }
 
@@ -627,6 +642,14 @@ class Client
     private function sendAuthInvalid(): string
     {
         return $this->dataSend('535 Authentication credentials invalid');
+    }
+
+    /**
+     * @return string
+     */
+    private function sendAuthRequired(): string
+    {
+        return $this->dataSend('530 5.7.0 Authentication required');
     }
 
     /**
