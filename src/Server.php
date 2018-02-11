@@ -333,11 +333,12 @@ class Server extends Thread
      * @param string $from
      * @param array $rcpt
      * @param Parser $mail
+     * @param string $authMethod
      * @param array $credentials
      */
-    public function newMail(string $from, array $rcpt, Parser $mail, $credentials)
+    public function newMail(string $from, array $rcpt, Parser $mail, $authMethod, $credentials)
     {
-        $this->eventExecute(Event::TRIGGER_NEW_MAIL, [$from, $rcpt, $mail, $credentials]);
+        $this->eventExecute(Event::TRIGGER_NEW_MAIL, [$from, $rcpt, $mail, $authMethod, $credentials]);
     }
 
     /**

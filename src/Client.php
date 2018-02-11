@@ -83,6 +83,11 @@ class Client
     private $credentials = [];
 
     /**
+     * @var string
+     */
+    private $authMethod = '';
+
+    /**
      * @var array
      */
     private $extendedCommands = [
@@ -262,6 +267,22 @@ class Client
     }
 
     /**
+     * @param string $method
+     */
+    public function setAuthMethod($method = '')
+    {
+        $this->authMethod = $method;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthMethod(): string
+    {
+        return $this->authMethod;
+    }
+
+    /**
      * @return string
      */
     public function getHostname(): string
@@ -390,6 +411,8 @@ class Client
             }
 
             $authentication = strtolower($args[0]);
+            
+            $this->setAuthMethod($authentication);
 
             if ($authentication == 'plain') {
                 $this->setStatus('hasAuthPlain', true);
@@ -475,7 +498,7 @@ class Client
                     $parser->setText($this->mail);
 
                     $server = $this->getServer();
-                    $server->newMail($this->from, $this->rcpt, $parser, $this->getCredentials());
+                    $server->newMail($this->from, $this->rcpt, $parser, $this->getAuthMethod(), $this->getCredentials());
 
                     $this->from = '';
                     $this->rcpt = [];
