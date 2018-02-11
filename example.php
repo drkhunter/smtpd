@@ -58,7 +58,7 @@ if (!$server->listen($contextOptions)) {
     exit(1);
 }
 
-$sendEvent = new Event(Event::TRIGGER_NEW_MAIL, null, function (Event $event, string $from, array $rcpts, Parser $mail) {
+$sendEvent = new Event(Event::TRIGGER_NEW_MAIL, null, function (Event $event, string $from, array $rcpts, Parser $mail, $credentials) {
     // Do stuff: DNS lookup the MX record for the recipient's domain,
     //           check whether the recipient is on a whitelist,
     //           handle the email, etc, ...

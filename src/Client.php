@@ -475,7 +475,7 @@ class Client
                     $parser->setText($this->mail);
 
                     $server = $this->getServer();
-                    $server->newMail($this->from, $this->rcpt, $parser);
+                    $server->newMail($this->from, $this->rcpt, $parser, $this->getCredentials());
 
                     $this->from = '';
                     $this->rcpt = [];
