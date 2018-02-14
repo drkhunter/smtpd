@@ -52,6 +52,11 @@ class Client
     private $port = 0;
 
     /**
+     * @var int
+     */
+    private $max_size = 0;
+
+    /**
      * @var string
      */
     private $recvBufferTmp = '';
@@ -112,6 +117,7 @@ class Client
 
         $this->logger = $this->options['logger'];
         $this->hostname = $this->options['hostname'];
+        $this->max_size = $this->options['max_size'];
 
         $this->status = [];
         $this->status['authenticated'] = false;
@@ -511,7 +517,7 @@ class Client
                     
                     $mailSize = mb_strlen($this->mail);
                     
-                    if ($this->options['max_size'] > 0 && $mailSize > $this->options['max_size']) {
+                    if ($this->max_size > 0 && $mailSize > $this->max_size) {
                         $this->recvBufferTmp = '';
                         return $this->sendMessageTooBig();
                     }

@@ -51,6 +51,11 @@ class Server extends Thread
     /**
      * @var int
      */
+    private $max_size;
+
+    /**
+     * @var int
+     */
     private $clientsId = 0;
 
     /**
@@ -86,6 +91,7 @@ class Server extends Thread
             'port' => 20025,
             'hostname' => 'localhost.localdomain',
             'logger' => new NullLogger(),
+            'max_size' => 0,
         ]);
         $this->options = $resolver->resolve($options);
 
@@ -94,6 +100,7 @@ class Server extends Thread
         $this->setIp($this->options['ip']);
         $this->setPort($this->options['port']);
         $this->setHostname($this->options['hostname']);
+        $this->setMaxSize($this->options['max_size']);
 
         $this->logger->info('start');
         $this->logger->info('ip = "' . $this->options['ip'] . '"');
@@ -115,6 +122,22 @@ class Server extends Thread
     public function getHostname()
     {
         return $this->hostname;
+    }
+
+    /**
+     * @param int $max_size
+     */
+    public function setMaxSize(int $max_size)
+    {
+        $this->max_size = $max_size;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxSize()
+    {
+        return $this->max_size;
     }
 
     /**
@@ -265,6 +288,7 @@ class Server extends Thread
         $options = [
             'hostname' => $this->getHostname(),
             'logger' => $this->logger,
+            'max_size' => $this->getMaxSize()
         ];
         $client = new Client($options);
         $client->setSocket($socket);
