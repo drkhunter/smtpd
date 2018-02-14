@@ -418,7 +418,7 @@ class Client
             }
 
             $authentication = strtolower($args[0]);
-            
+
             $this->setAuthMethod($authentication);
 
             if ($authentication == 'plain') {
@@ -501,6 +501,13 @@ class Client
                 if ($msgRaw == '.') {
                     $this->mail = substr($this->mail, 0, -strlen(static::MSG_SEPARATOR));
 
+                    $mailSize = mb_strlen($this->mail);
+
+                    if ($this->max_size > 0 && $mailSize > $this->max_size) {
+                        $this->mail = '';
+                        return $this->sendMessageTooBig();
+                    }
+
                     $parser = new Parser();
                     $parser->setText($this->mail);
 
@@ -514,14 +521,6 @@ class Client
                     return $this->sendOk();
                 } else {
                     $this->mail .= $msgRaw . static::MSG_SEPARATOR;
-                    
-                    $mailSize = mb_strlen($this->mail);
-                    
-                    if ($this->max_size > 0 && $mailSize > $this->max_size) {
-                        $this->recvBufferTmp = '';
-                        $this->shutdown();
-                        return $this->sendMessageTooBig();
-                    }
                 }
             } else {
                 $this->logger->debug('client ' . $this->id . ' not implemented: /' . $command . '/ - /' . join('/ /', $args) . '/');
