@@ -106,6 +106,7 @@ class Client
         $resolver->setDefaults([
             'hostname' => 'localhost.localdomain',
             'logger' => new NullLogger(),
+            'max_size' => 0,
         ]);
         $this->options = $resolver->resolve($options);
 
@@ -507,6 +508,13 @@ class Client
                     return $this->sendOk();
                 } else {
                     $this->mail .= $msgRaw . static::MSG_SEPARATOR;
+                    
+                    $mailSize = mb_strlen($this->mail);
+                    
+                    if ($this->options['max_size'] > 0 && $mailSize > $this->options['max_size']) {
+                        $this->recvBufferTmp = '';
+                        return $this->sendMessageTooBig();
+                    }
                 }
             } else {
                 $this->logger->debug('client ' . $this->id . ' not implemented: /' . $command . '/ - /' . join('/ /', $args) . '/');
@@ -681,6 +689,14 @@ class Client
     private function sendUserUnknown(): string
     {
         return $this->dataSend('550 User unknown');
+    }
+
+    /**
+     * @return string
+     */
+    private function sendMessageTooBig(): string
+    {
+        return $this->dataSend('552 5.3.4 Error: message too big');
     }
 
     public function shutdown()
