@@ -519,6 +519,7 @@ class Client
                     
                     if ($this->max_size > 0 && $mailSize > $this->max_size) {
                         $this->recvBufferTmp = '';
+                        $this->shutdown();
                         return $this->sendMessageTooBig();
                     }
                 }
