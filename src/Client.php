@@ -351,9 +351,6 @@ class Client
 
             return $this->dataSend($response);
         } elseif ($commandCmp == 'mail') {
-            if (!$this->getStatus('authenticated')) {
-                return $this->sendAuthRequired();
-            }
             if ($this->getStatus('hasHello')) {
                 if (isset($args[0]) && $args[0]) {
                     $this->setStatus('hasMail', true);
@@ -371,9 +368,6 @@ class Client
                 return $this->sendSyntaxErrorCommandUnrecognized();
             }
         } elseif ($commandCmp == 'rcpt') {
-            if (!$this->getStatus('authenticated')) {
-                return $this->sendAuthRequired();
-            }
             if ($this->getStatus('hasHello')) {
                 if (isset($args[0]) && $args[0]) {
                     $this->setStatus('hasMail', true);
@@ -382,7 +376,7 @@ class Client
                         $rcpt = substr(substr($rcpt, 4), 0, -1);
 
                         $server = $this->getServer();
-                        if (!$server->newRcpt($rcpt)) {
+                        if (!$this->getStatus('authenticated') && !$server->newRcpt($rcpt)) {
                             return $this->sendUserUnknown();
                         }
                         $this->rcpt[] = $rcpt;
@@ -395,9 +389,6 @@ class Client
                 return $this->sendSyntaxErrorCommandUnrecognized();
             }
         } elseif ($commandCmp == 'data') {
-            if (!$this->getStatus('authenticated')) {
-                return $this->sendAuthRequired();
-            }
             if ($this->getStatus('hasHello')) {
                 $this->setStatus('hasData', true);
                 return $this->sendDataResponse();
@@ -462,9 +453,6 @@ class Client
             $this->recvBufferTmp = '';
             return $this->sendOk();
         } elseif ($commandCmp == 'help') {
-            if (!$this->getStatus('authenticated')) {
-                return $this->sendAuthRequired();
-            }
             return $this->sendOk('HELO, EHLO, MAIL FROM, RCPT TO, DATA, NOOP, RSET, QUIT');
         } else {
             if ($this->getStatus('hasAuth')) {
@@ -694,7 +682,7 @@ class Client
      */
     private function sendUserUnknown(): string
     {
-        return $this->dataSend('550 User unknown');
+        return $this->dataSend('550 User unknown or Authentication required');
     }
 
     /**
