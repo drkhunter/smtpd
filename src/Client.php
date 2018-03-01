@@ -123,6 +123,8 @@ class Client
         $this->status['authenticated'] = false;
         $this->status['hasHello'] = false;
         $this->status['hasMail'] = false;
+        $this->status['hasFrom'] = false;
+        $this->status['hasRcpt'] = false;
         $this->status['hasShutdown'] = false;
     }
 
@@ -360,15 +362,16 @@ class Client
                     }
                     $this->from = $from;
                     $this->mail = '';
+                    $this->setStatus('hasFrom', true);
                     return $this->sendOk();
                 } else {
                     return $this->sendSyntaxErrorInParameters();
                 }
             } else {
-                return $this->sendSyntaxErrorCommandUnrecognized();
+                return $this->sendBadSequenceOfCommands();
             }
         } elseif ($commandCmp == 'rcpt') {
-            if ($this->getStatus('hasHello')) {
+            if ($this->getStatus('hasHello') && $this->getStatus('hasFrom')) {
                 if (isset($args[0]) && $args[0]) {
                     $this->setStatus('hasMail', true);
                     $rcpt = $args[0];
@@ -376,24 +379,30 @@ class Client
                         $rcpt = substr(substr($rcpt, 4), 0, -1);
 
                         $server = $this->getServer();
-                        if (!$this->getStatus('authenticated') && !$server->newRcpt($rcpt)) {
-                            return $this->sendUserUnknown();
+                        if (!$this->getStatus('authenticated')) {
+                            if (!$server->newRcpt($rcpt)) {
+                                return $this->sendUserUnknown();
+                            } else {
+                                return $this->sendAuthRequired();
+                            }
                         }
+                        
                         $this->rcpt[] = $rcpt;
                     }
+                    $this->setStatus('hasRcpt', true);
                     return $this->sendOk();
                 } else {
                     return $this->sendSyntaxErrorInParameters();
                 }
             } else {
-                return $this->sendSyntaxErrorCommandUnrecognized();
+                return $this->sendBadSequenceOfCommands();
             }
         } elseif ($commandCmp == 'data') {
-            if ($this->getStatus('hasHello')) {
+            if ($this->getStatus('hasHello') && $this->getStatus('hasRcpt')) {
                 $this->setStatus('hasData', true);
                 return $this->sendDataResponse();
             } else {
-                return $this->sendSyntaxErrorCommandUnrecognized();
+                return $this->sendBadSequenceOfCommands();
             }
         } elseif ($commandCmp == 'noop') {
             return $this->sendOk();
@@ -659,6 +668,14 @@ class Client
     private function sendCommandNotImplemented(): string
     {
         return $this->dataSend('502 Command not implemented');
+    }
+
+    /**
+     * @return string
+     */
+    private function sendBadSequenceOfCommands(): string
+    {
+        return $this->dataSend('503 5.5.1 Bad sequence of commands');
     }
 
     /**
