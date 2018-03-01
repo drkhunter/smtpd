@@ -388,8 +388,8 @@ class Client
                         }
                         
                         $this->rcpt[] = $rcpt;
+                        $this->setStatus('hasRcpt', true);
                     }
-                    $this->setStatus('hasRcpt', true);
                     return $this->sendOk();
                 } else {
                     return $this->sendSyntaxErrorInParameters();
