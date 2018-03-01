@@ -382,8 +382,6 @@ class Client
                         if (!$this->getStatus('authenticated')) {
                             if (!$server->newRcpt($rcpt)) {
                                 return $this->sendUserUnknown();
-                            } else {
-                                return $this->sendAuthRequired();
                             }
                         }
                         
